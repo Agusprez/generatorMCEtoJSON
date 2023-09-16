@@ -41,15 +41,15 @@ def cargar_excel(ruta):
         # Obtener el nombre base del archivo Excel (sin extensión)
         nombre_base = os.path.splitext(os.path.basename(ruta))[0]
 
-        # Construir el nombre del archivo JSON
-        nombre_archivo_json = f"{nombre_base}.json"
+        # Construir la ruta completa del archivo JSON en la misma carpeta
+        ruta_json = os.path.join(os.path.dirname(ruta), f"{nombre_base}.json")
 
         data_dict = df.to_dict(orient="records")
 
-        with open(nombre_archivo_json, "w", encoding="utf-8") as json_file:
+        with open(ruta_json, "w", encoding="utf-8") as json_file:
             json.dump(data_dict, json_file, ensure_ascii=False)
 
-        print(f"Los datos se han guardado en {nombre_archivo_json}")
+        print(f"Los datos se han guardado en {ruta_json}")
 
     except Exception as e:
         print("Error al cargar el archivo Excel:", e)
