@@ -44,8 +44,10 @@ import locale
 def cargar_json(ruta):
     try:
         with open(ruta, "r", encoding="utf-8") as json_file:
-            data_dict = json.load(json_file)
+            json_data = json.load(json_file)
 
+        data_cuit = json_data.get("CUIT")
+        data_dict = json_data.get("datosFacturacion", [])
         # Establecer la configuración regional a español
         locale.setlocale(locale.LC_TIME, 'es_ES.utf8')
 
@@ -80,8 +82,12 @@ def cargar_json(ruta):
 
             print("--")
 
-        print(f"Datos cargados desde {ruta}")
+        #print(f"Datos cargados desde {ruta}")
+        
+        print("----")
+        print(f"CUIT Contribuyente {data_cuit}")
         print(f"Periodo {periodo}")
+        print("----")
         print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")
         # Calcular el valorTotal como la diferencia entre totalPositivo y totalNegativo
         valorTotal = totalPositivo - totalNegativo
