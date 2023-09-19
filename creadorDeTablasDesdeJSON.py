@@ -54,6 +54,9 @@ def cargar_json(ruta):
         primerComprobante = None  # Inicialmente no se conoce
         ultimoComprobante = None  # Inicialmente no se conoce
         periodo = None  # Inicialmente no se conoce
+        #Aca tengo que definir lso acumuladores, de ventas y de notas de credito
+        totalPositivo = 0
+        totalNegativo = 0
 
         for i, item in enumerate(data_dict):
             for clave in ["Fecha", "Tipo", "Punto de Venta", "Número Desde", "Nro. Doc. Receptor", "Denominación Receptor", "Imp. Total"]:
@@ -62,8 +65,14 @@ def cargar_json(ruta):
                         fecha = datetime.strptime(item[clave], "%d/%m/%Y")
                         periodo = fecha.strftime("%B %Y")  # Formato "mes año"
                     print(f"{clave}: {item[clave]}")
-                    if clave == "Imp. Total":
-                        totalGeneral += item[clave]
+                    #if clave == "Imp. Total":
+                    #    totalGeneral += item[clave]
+                     # Verificar el tipo de comprobante y acumular según corresponda
+                    if clave == "Tipo":
+                        if item[clave] == "13 - Nota de Crédito C":
+                            totalNegativo += item.get("Imp. Total", 0)
+                        else: 
+                            totalPositivo += item.get("Imp. Total", 0)    
 
             if i == 0:
                 primerComprobante = item.get("Número Desde")
@@ -74,7 +83,14 @@ def cargar_json(ruta):
         print(f"Datos cargados desde {ruta}")
         print(f"Periodo {periodo}")
         print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")
-        print(f"Total: {totalGeneral}")
+        # Calcular el valorTotal como la diferencia entre totalPositivo y totalNegativo
+        valorTotal = totalPositivo - totalNegativo
+
+        # Imprimir los totales
+        print(f"Total Positivo: {totalPositivo}")
+        print(f"Total Negativo (Notas de Crédito C): {totalNegativo}")
+        #print(f"Total General: {totalGeneral}")
+        print(f"Valor Total: {valorTotal}")
     except Exception as e:
         print("Error al cargar el archivo JSON:", e)
 
