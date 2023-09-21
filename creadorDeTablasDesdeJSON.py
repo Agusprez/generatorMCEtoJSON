@@ -38,8 +38,6 @@ def procesar_carpeta(carpeta):
 
 # FUNCION PARA CARGAR EL JSON Y MOSTRAR POR CONSOLA LOS VALORES DESEADOS DEL JSON
 
-from datetime import datetime
-import locale
 
 def cargar_json(ruta):
     try:
@@ -52,55 +50,92 @@ def cargar_json(ruta):
         locale.setlocale(locale.LC_TIME, 'es_ES.utf8')
 
         # Inicializar variables
-        totalGeneral = 0
+       
         primerComprobante = None  # Inicialmente no se conoce
         ultimoComprobante = None  # Inicialmente no se conoce
         periodo = None  # Inicialmente no se conoce
         #Aca tengo que definir lso acumuladores, de ventas y de notas de credito
         totalPositivo = 0
         totalNegativo = 0
+        #Tengo que crear un arreglo para ir guardando los datos de los comprobantes para luego mandarlo a crearPDF
+
+        datosComprobante = []
 
         for i, item in enumerate(data_dict):
+            datos_comprobante_actual = {}
+            #Esta iteracion hace referencia cada uno de los datos dentro de Datos Facturacion del JSON
             for clave in ["Fecha", "Tipo", "Punto de Venta", "Número Desde", "Nro. Doc. Receptor", "Denominación Receptor", "Imp. Total"]:
                 if clave in item:
                     if clave == "Fecha":
                         fecha = datetime.strptime(item[clave], "%d/%m/%Y")
                         periodo = fecha.strftime("%B %Y")  # Formato "mes año"
-                    print(f"{clave}: {item[clave]}")
+                    datos_comprobante_actual[clave] = item[clave]
+                    #print(f"{clave}: {item[clave]}")
                     #if clave == "Imp. Total":
                     #    totalGeneral += item[clave]
                      # Verificar el tipo de comprobante y acumular según corresponda
                     if clave == "Tipo":
                         if item[clave] == "13 - Nota de Crédito C":
                             totalNegativo += item.get("Imp. Total", 0)
+                            #datosComprobante.append({"clave": clave, "valor": item[clave]})
+                        elif item[clave] == "9 - Recibo C":
+                            totalPositivo = totalPositivo    
                         else: 
-                            totalPositivo += item.get("Imp. Total", 0)    
+                            totalPositivo += item.get("Imp. Total", 0)   
+                            #datosComprobante.append({"clave": clave, "valor": item[clave]}) 
 
+
+
+            datosComprobante.append(datos_comprobante_actual)
             if i == 0:
                 primerComprobante = item.get("Número Desde")
             ultimoComprobante = item.get("Número Desde")
 
-            print("--")
+            #print("--")
 
         #print(f"Datos cargados desde {ruta}")
         
         print("----")
-        print(f"CUIT Contribuyente {data_cuit}")
-        print(f"Periodo {periodo}")
-        print("----")
-        print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")
-        # Calcular el valorTotal como la diferencia entre totalPositivo y totalNegativo
         valorTotal = totalPositivo - totalNegativo
+        crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
+        crear_informe_txt(data_cuit,primerComprobante,ultimoComprobante,periodo,valorTotal)
+        #LA IDEA ACA, ES QUE DEPENDIENDO DEL CUIT, ME DEVUELVA DATOS DEL CONTRIBUYENTE DESDE UNA BBDD, COMO RAZON SOCIAL, LEGAJO MUNICIPAL, CODIGO DE USUARIO, ENTRE OTROS.. 
+        #print(f"Periodo {periodo}")
+        print("----")
+        
+        #print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")
+        # Calcular el valorTotal como la diferencia entre totalPositivo y totalNegativo
+        
 
         # Imprimir los totales
-        print(f"Total Positivo: {totalPositivo}")
-        print(f"Total Negativo (Notas de Crédito C): {totalNegativo}")
+        #print(f"Total Positivo: {totalPositivo}")
+        #print(f"Total Negativo (Notas de Crédito C): {totalNegativo}")
         #print(f"Total General: {totalGeneral}")
-        print(f"Valor Total: {valorTotal}")
+        #print(f"Valor Total: {valorTotal}")
     except Exception as e:
         print("Error al cargar el archivo JSON:", e)
 
+def crear_informe_txt(cuit, primerComprobante, ultimoComprobante, periodo, valorTotal):
+    # Abrir el archivo en modo escritura (se creará o sobrescribirá si ya existe)
 
+    nombreArchivo = "C:/Users/perez/OneDrive/Documentos/data MCE/reporteDeVentas - " + periodo + ".txt"
+    with open(nombreArchivo, "a", encoding="utf-8") as archivo_txt:
+        archivo_txt.write("------------------------------\n")
+        archivo_txt.write(f"CUIT {cuit}\n")
+        archivo_txt.write(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}\n")
+        archivo_txt.write(f"Periodo: {periodo}\n")        
+        archivo_txt.write(f"Total: {valorTotal}\n")
+        archivo_txt.write("------------------------------\n")
+
+def crearPDF(cuit,primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante):
+    print(f"Llame a la funcion crearPDF con el cuit {cuit}")
+    print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")   
+    print(f"Periodo {periodo}")
+    print("--")
+    print("Aca voy a imprimir el JSON que le paso con los datos de los comprobantes")
+    print(f"{datosComprobante}")
+    print("--")
+    print(f"Total {valorTotal}")
 
 
 def mostrar_resumen():
