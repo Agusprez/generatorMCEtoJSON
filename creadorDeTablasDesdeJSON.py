@@ -54,11 +54,13 @@ def cargar_json(ruta):
         primerComprobante = None  # Inicialmente no se conoce
         ultimoComprobante = None  # Inicialmente no se conoce
         periodo = None  # Inicialmente no se conoce
+        puntoDeVenta = None
         #Aca tengo que definir lso acumuladores, de ventas y de notas de credito
         totalPositivo = 0
         totalNegativo = 0
         #Tengo que crear un arreglo para ir guardando los datos de los comprobantes para luego mandarlo a crearPDF
-
+        
+        
         datosComprobante = []
 
         for i, item in enumerate(data_dict):
@@ -70,10 +72,6 @@ def cargar_json(ruta):
                         fecha = datetime.strptime(item[clave], "%d/%m/%Y")
                         periodo = fecha.strftime("%B %Y")  # Formato "mes año"
                     datos_comprobante_actual[clave] = item[clave]
-                    #print(f"{clave}: {item[clave]}")
-                    #if clave == "Imp. Total":
-                    #    totalGeneral += item[clave]
-                     # Verificar el tipo de comprobante y acumular según corresponda
                     if clave == "Tipo":
                         if item[clave] == "13 - Nota de Crédito C":
                             totalNegativo += item.get("Imp. Total", 0)
@@ -91,39 +89,32 @@ def cargar_json(ruta):
                 primerComprobante = item.get("Número Desde")
             if item["Tipo"] == "11 - Factura C":
                 ultimoComprobante = item.get("Número Desde")
-
-            #print("--")
-
-        
-        #print(f"Datos cargados desde {ruta}")
-        
         print("----")
+        puntoDeVenta = (datosComprobante[0].get("Punto de Venta"))
         valorTotal = totalPositivo - totalNegativo
-        crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
-        crear_informe_txt(data_cuit,primerComprobante,ultimoComprobante,periodo,valorTotal)
-        #LA IDEA ACA, ES QUE DEPENDIENDO DEL CUIT, ME DEVUELVA DATOS DEL CONTRIBUYENTE DESDE UNA BBDD, COMO RAZON SOCIAL, LEGAJO MUNICIPAL, CODIGO DE USUARIO, ENTRE OTROS.. 
-        #print(f"Periodo {periodo}")
+        #crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
+        crear_informe_txt(data_cuit,primerComprobante,ultimoComprobante,periodo,valorTotal,puntoDeVenta)
         print("----")
-        
-        #print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")
-        # Calcular el valorTotal como la diferencia entre totalPositivo y totalNegativo
-        
-
-        # Imprimir los totales
-        #print(f"Total Positivo: {totalPositivo}")
-        #print(f"Total Negativo (Notas de Crédito C): {totalNegativo}")
-        #print(f"Total General: {totalGeneral}")
-        #print(f"Valor Total: {valorTotal}")
     except Exception as e:
         print("Error al cargar el archivo JSON:", e)
 
-def crear_informe_txt(cuit, primerComprobante, ultimoComprobante, periodo, valorTotal):
+def crear_informe_txt(cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,puntoDeVenta):
     # Abrir el archivo en modo escritura (se creará o sobrescribirá si ya existe)
 
     nombreArchivo = "C:/Users/perez/OneDrive/Documentos/data MCE/reporteDeVentas - " + periodo + ".txt"
     with open(nombreArchivo, "a", encoding="utf-8") as archivo_txt:
+        datosJSON = obtener_datos_por_cuit(cuit)
+        razonSocial = datosJSON.get("RAZON SOCIAL")
+        userGomez = datosJSON.get("USER")
+
+        if userGomez == "-":
+            userGomez = "Sin usuario definido"
+
         archivo_txt.write("------------------------------\n")
+        archivo_txt.write(f"USER {userGomez}\n")
         archivo_txt.write(f"CUIT {cuit}\n")
+        archivo_txt.write(f"Razon Social {razonSocial}\n")
+        archivo_txt.write(f"Punto de Venta: {puntoDeVenta}\n")
         archivo_txt.write(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}\n")
         archivo_txt.write(f"Periodo: {periodo}\n")        
         archivo_txt.write(f"Total: {valorTotal}\n")
@@ -138,6 +129,20 @@ def crearPDF(cuit,primerComprobante, ultimoComprobante, periodo, valorTotal,dato
     print(f"{datosComprobante}")
     print("--")
     print(f"Total {valorTotal}")
+
+#Funcion para leer los datos que tengo cargado en un JSON, para poder tener Razon Social, y otros datos
+def obtener_datos_por_cuit(cuit):
+    try:
+        with open('C:/Users/perez/OneDrive/Documentos/Generador Estudio/BBDD.json', 'r') as archivo:
+            datos = json.load(archivo)
+            for entrada in datos:
+                if entrada.get("CUIT") == cuit:
+                    return entrada
+            return {"error": "CUIT no encontrado"}
+    except FileNotFoundError:
+        return {"error": "Archivo JSON no encontrado"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def mostrar_resumen():
