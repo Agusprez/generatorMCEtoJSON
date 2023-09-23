@@ -89,10 +89,12 @@ def cargar_json(ruta):
             datosComprobante.append(datos_comprobante_actual)
             if i == 0:
                 primerComprobante = item.get("Número Desde")
-            ultimoComprobante = item.get("Número Desde")
+            if item["Tipo"] == "11 - Factura C":
+                ultimoComprobante = item.get("Número Desde")
 
             #print("--")
 
+        
         #print(f"Datos cargados desde {ruta}")
         
         print("----")
