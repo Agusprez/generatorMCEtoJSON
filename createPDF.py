@@ -36,29 +36,68 @@ datosComprobante = [
     }
 ]
 
-def crearPDF(cuit,puntoDeVenta,periodo,totalFacturado,datosDeLosComprobantes):
+def createPDF(cuit,puntoDeVenta,periodo,totalFacturado,datosDeLosComprobantes,ruta):
   data = obtener_datos_por_cuit(cuit)
-  
+  nombreArchivo = ruta +"/" + data.get("RAZON SOCIAL") + " - " +periodo +".txt"
+
   #DATOS PARA EL ENCABEZADO
   #NUMERO DE CLIENTE
   usuarioGomez = data.get("USER")
   #CONTRIBUYENTE
   contribuyente = data.get("RAZON SOCIAL")
-  #PUNTO DE VENTA
-  
+  #LEGAJO
+  legajo = data.get("LEGAJO")
+  if legajo == "-":
+    legajo = "SIN LEGAJO"
+
+
 
   print(f"USER: {usuarioGomez}")
+  print(f"CUIT: {cuit}")
   print(f"CONTRIBUYENTE: {contribuyente}")
+  print(f"LEGAJO: {legajo}")
   print(f"PUNTO DE VENTA: {puntoDeVenta}")
   print(f"PERIODO: {periodo}")
 
-  tabla = PrettyTable()
-  tabla.field_names = ["Fecha","Tipo","Número Desde","Nro. Doc. Receptor", "Denominación Receptor","Imp. Total"]
+  tablaDeComprobantes = PrettyTable()
+  tablaDeComprobantes.field_names = ["Fecha","Tipo","Número Desde","Nro. Doc. Receptor", "Denominación Receptor","Imp. Total"]
 
   for elemento in datosDeLosComprobantes:
-    tabla.add_row([elemento["Fecha"], elemento["Tipo"], elemento["Número Desde"], elemento["Nro. Doc. Receptor"], elemento["Denominación Receptor"], elemento["Imp. Total"]])
-  print (tabla)
-  print(f"Total facturado: $ {totalFacturado}")
+    if elemento["Nro. Doc. Receptor"] == 0.0:
+      nroDocReceptor = ""
+    else: 
+      nroDocReceptor = elemento["Nro. Doc. Receptor"]
+
+    if elemento["Denominación Receptor"] == 0.0:
+      denomReceptor = ""
+    else: 
+      denomReceptor = elemento["Denominación Receptor"][:16]
+
+    tablaDeComprobantes.add_row([elemento["Fecha"], elemento["Tipo"], elemento["Número Desde"], 
+                                 nroDocReceptor, 
+                                 denomReceptor, 
+                                 elemento["Imp. Total"]])
+
+  tablaDeComprobantes.add_row(["","","","","",""])
+  tablaDeComprobantes.add_row(["","","","","Importe Total",totalFacturado])
 
 
-crearPDF(data_cuit,puntoDeVenta,periodo,valorTotal,datosComprobante)
+  # Abre el archivo en modo escritura
+  with open(nombreArchivo, "w") as archivo:
+
+    # Escribe los datos en el archivo
+    archivo.write(f"USER: {usuarioGomez}\n")
+    archivo.write(f"CUIT: {cuit}\n")
+    archivo.write(f"CONTRIBUYENTE: {contribuyente}\n")
+    archivo.write(f"LEGAJO: {legajo}\n")
+    archivo.write(f"PUNTO DE VENTA: {puntoDeVenta}\n")
+    archivo.write(f"PERIODO: {periodo}\n")
+
+    # Escribe la tabla en el archivo
+    archivo.write(str(tablaDeComprobantes))
+
+    print(f"Los datos se han guardado en el archivo: {nombreArchivo}")
+
+  print (tablaDeComprobantes)
+
+#createPDF(data_cuit,puntoDeVenta,periodo,valorTotal,datosComprobante)

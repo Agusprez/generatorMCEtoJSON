@@ -7,9 +7,10 @@ import pandas as pd
 import time
 from datetime import datetime
 import locale
-from crearPDF import crearPDF
+#from crearPDF import crearPDF
 
 from crear_informe_txt import crear_informe_txt
+from createPDF import createPDF
 
 # Variables globales para rastrear el estado del procesamiento
 archivos_procesados = 0
@@ -31,7 +32,7 @@ def procesar_carpeta(carpeta):
             ruta_archivo = os.path.join(carpeta, archivo)
             archivos_procesados += 1
             try:
-                cargar_json(ruta_archivo)
+                cargar_json(ruta_archivo,carpeta)
                 archivos_generados += 1
             except Exception as e:
                 print(f"Error al procesar {ruta_archivo}: {e}")
@@ -42,7 +43,7 @@ def procesar_carpeta(carpeta):
 # FUNCION PARA CARGAR EL JSON Y MOSTRAR POR CONSOLA LOS VALORES DESEADOS DEL JSON
 
 
-def cargar_json(ruta):
+def cargar_json(ruta,carpeta):
     try:
         with open(ruta, "r", encoding="utf-8") as json_file:
             json_data = json.load(json_file)
@@ -95,7 +96,8 @@ def cargar_json(ruta):
         print("----")
         puntoDeVenta = (datosComprobante[0].get("Punto de Venta"))
         valorTotal = totalPositivo - totalNegativo
-        crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
+        #crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
+        createPDF(data_cuit,puntoDeVenta,periodo,valorTotal,datosComprobante,carpeta)
         #crear_informe_txt(data_cuit,primerComprobante,ultimoComprobante,periodo,valorTotal,puntoDeVenta)
         print("----")
     except Exception as e:
