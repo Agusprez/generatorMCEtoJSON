@@ -7,6 +7,9 @@ import pandas as pd
 import time
 from datetime import datetime
 import locale
+from crearPDF import crearPDF
+
+from crear_informe_txt import crear_informe_txt
 
 # Variables globales para rastrear el estado del procesamiento
 archivos_procesados = 0
@@ -92,59 +95,13 @@ def cargar_json(ruta):
         print("----")
         puntoDeVenta = (datosComprobante[0].get("Punto de Venta"))
         valorTotal = totalPositivo - totalNegativo
-        #crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
-        crear_informe_txt(data_cuit,primerComprobante,ultimoComprobante,periodo,valorTotal,puntoDeVenta)
+        crearPDF(data_cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante)
+        #crear_informe_txt(data_cuit,primerComprobante,ultimoComprobante,periodo,valorTotal,puntoDeVenta)
         print("----")
     except Exception as e:
         print("Error al cargar el archivo JSON:", e)
 
-def crear_informe_txt(cuit, primerComprobante, ultimoComprobante, periodo, valorTotal,puntoDeVenta):
-    # Abrir el archivo en modo escritura (se creará o sobrescribirá si ya existe)
-
-    nombreArchivo = "C:/Users/perez/OneDrive/Documentos/data MCE/reporteDeVentas - " + periodo + ".txt"
-    with open(nombreArchivo, "a", encoding="utf-8") as archivo_txt:
-        datosJSON = obtener_datos_por_cuit(cuit)
-        razonSocial = datosJSON.get("RAZON SOCIAL")
-        userGomez = datosJSON.get("USER")
-
-        if userGomez == "-":
-            userGomez = "Sin usuario definido"
-
-        archivo_txt.write("------------------------------\n")
-        archivo_txt.write(f"USER {userGomez}\n")
-        archivo_txt.write(f"CUIT {cuit}\n")
-        archivo_txt.write(f"Razon Social {razonSocial}\n")
-        archivo_txt.write(f"Punto de Venta: {puntoDeVenta}\n")
-        archivo_txt.write(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}\n")
-        archivo_txt.write(f"Periodo: {periodo}\n")        
-        archivo_txt.write(f"Total: {valorTotal}\n")
-        archivo_txt.write("------------------------------\n")
-
-def crearPDF(cuit,primerComprobante, ultimoComprobante, periodo, valorTotal,datosComprobante):
-    print(f"Llame a la funcion crearPDF con el cuit {cuit}")
-    print(f"Comprobantes desde {primerComprobante} hasta {ultimoComprobante}")   
-    print(f"Periodo {periodo}")
-    print("--")
-    print("Aca voy a imprimir el JSON que le paso con los datos de los comprobantes")
-    print(f"{datosComprobante}")
-    print("--")
-    print(f"Total {valorTotal}")
-
 #Funcion para leer los datos que tengo cargado en un JSON, para poder tener Razon Social, y otros datos
-def obtener_datos_por_cuit(cuit):
-    try:
-        with open('C:/Users/perez/OneDrive/Documentos/Generador Estudio/BBDD.json', 'r') as archivo:
-            datos = json.load(archivo)
-            for entrada in datos:
-                if entrada.get("CUIT") == cuit:
-                    return entrada
-            return {"error": "CUIT no encontrado"}
-    except FileNotFoundError:
-        return {"error": "Archivo JSON no encontrado"}
-    except Exception as e:
-        return {"error": str(e)}
-
-
 def mostrar_resumen():
     global archivos_procesados, archivos_generados, errores, tiempo_inicio
     tiempo_fin = time.time()
