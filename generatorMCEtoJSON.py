@@ -35,13 +35,24 @@ def procesar_carpeta(carpeta):
 
 def cargar_excel(ruta):
     try:
+
         df = pd.read_excel(ruta, skiprows=1)
         df.fillna(0, inplace=True)
         
         # Obtener el nombre base del archivo Excel (sin extensión)
         nombre_base = os.path.splitext(os.path.basename(ruta))[0]
         # Obtener los primeros 11 caracteres del nombre del archivo Excel
-        cuit = nombre_base[:11]
+        #Tengo que obtener a partir de lo de adentro del excel cl
+        primera_fila_excel = pd.read_excel(ruta, header=None, nrows=1).iloc[0]
+
+        #Todo esto me sirve para obtener el cuit de dentro del mismo archivo excel
+        invertir = (primera_fila_excel[0])
+        invertir = invertir[::-1]
+        invertir = invertir[:11]
+        invertir = invertir[::-1]
+        #print(invertir)
+
+        cuit = invertir
 
         # Construir la ruta completa del archivo JSON en la misma carpeta
         ruta_json = os.path.join(os.path.dirname(ruta), f"{nombre_base}.json")
